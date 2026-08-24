@@ -3,10 +3,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, X, ChevronDown } from "lucide-react";
 import { ProbabilityBar } from "./ProbabilityBar";
 import { ReasonPanel } from "./ReasonPanel";
+import { ShareButton } from "./ShareButton";
 
 const isDefinite = (c) => c === "DEFINITE_YES" || c === "DEFINITE_NO";
 
-export const AnswerDisplay = ({ result }) => {
+export const AnswerDisplay = ({ result, question }) => {
   const [showReason, setShowReason] = useState(false);
   const { answer, yesProbability, noProbability, certainty, confidence, shortAnswer } = result;
   const definite = isDefinite(certainty);
@@ -68,22 +69,25 @@ export const AnswerDisplay = ({ result }) => {
         </motion.div>
       )}
 
-      {/* Reason toggle */}
-      <motion.button
-        type="button"
-        data-testid="reason-button"
-        onClick={() => setShowReason((s) => !s)}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: definite ? 0.5 : 0.7, duration: 0.4 }}
-        aria-expanded={showReason}
-        className="mt-10 flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-6 py-2.5 text-sm font-medium text-black transition-colors duration-200 hover:border-black"
-      >
-        Reason
-        <ChevronDown
-          className={`h-4 w-4 transition-transform duration-300 ${showReason ? "rotate-180" : ""}`}
-        />
-      </motion.button>
+      {/* Reason toggle + Share */}
+      <div className="mt-10 flex items-center gap-3">
+        <motion.button
+          type="button"
+          data-testid="reason-button"
+          onClick={() => setShowReason((s) => !s)}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: definite ? 0.5 : 0.7, duration: 0.4 }}
+          aria-expanded={showReason}
+          className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-6 py-2.5 text-sm font-medium text-black transition-colors duration-200 hover:border-black"
+        >
+          Reason
+          <ChevronDown
+            className={`h-4 w-4 transition-transform duration-300 ${showReason ? "rotate-180" : ""}`}
+          />
+        </motion.button>
+        <ShareButton question={question} result={result} delay={definite ? 0.6 : 0.8} />
+      </div>
 
       {/* Expandable reasoning */}
       <div className="w-full text-left">

@@ -1,9 +1,13 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, Request
+from fastapi.responses import Response, HTMLResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+import secrets
+import asyncio
+from html import escape
 from pathlib import Path
 from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional
@@ -14,6 +18,7 @@ ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 from ai_provider import get_provider
+from share_image import render_card
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
@@ -71,6 +76,11 @@ class AnswerResponse(BaseModel):
     reason: str
     evidence: List[str] = []
     sources: List[Source] = []
+
+
+class ShareCreate(BaseModel):
+    question: str
+    result: AnswerResponse
 
 
 def _sanitize(raw: dict) -> AnswerResponse:
@@ -151,6 +161,91 @@ async def answer(req: AnswerRequest):
         logger.warning(f"Could not log answer: {e}")
 
     return result
+
+
+# ---------- Share ----------
+@api_router.post("/share")
+async def create_share(payload: ShareCreate):
+    question = payload.question.strip()
+    if not (3 <= len(question) <= 500):
+        raise HTTPException(status_code=422, detail="Invalid question length.")
+    sid = secrets.token_urlsafe(6)[:8]
+    await db.shares.insert_one({
+        "id": sid,
+        "question": question,
+        "result": payload.result.model_dump(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    })
+    return {"id": sid}
+
+
+@api_router.get("/share/{sid}")
+async def get_share(sid: str):
+    doc = await db.shares.find_one({"id": sid}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Shared answer not found.")
+    return {"question": doc["question"], "result": doc["result"]}
+
+
+@api_router.get("/s/{sid}/image.png")
+async def share_image(sid: str):
+    doc = await db.shares.find_one({"id": sid}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Not found.")
+    try:
+        png = await asyncio.to_thread(render_card, doc["question"], doc["result"])
+    except Exception as e:
+        logger.error(f"Share image render failed: {e}")
+        raise HTTPException(status_code=500, detail="Could not render image.")
+    return Response(
+        content=png,
+        media_type="image/png",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
+@api_router.get("/s/{sid}")
+async def share_page(sid: str, request: Request):
+    doc = await db.shares.find_one({"id": sid}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Shared answer not found.")
+
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host")
+    scheme = request.headers.get("x-forwarded-proto", "https")
+    base = f"{scheme}://{host}"
+
+    q = doc["question"]
+    r = doc["result"]
+    ans = r.get("answer", "")
+    desc = r.get("shortAnswer", "") or "yesno reduces complicated questions to a clear Yes or No."
+    img = f"{base}/api/s/{sid}/image.png"
+    redirect = f"/?shared={sid}"
+    title = f"{ans} — {q}"
+
+    html = f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{escape(title)}</title>
+<meta name="description" content="{escape(desc)}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{escape(title)}">
+<meta property="og:description" content="{escape(desc)}">
+<meta property="og:image" content="{escape(img)}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{escape(title)}">
+<meta name="twitter:description" content="{escape(desc)}">
+<meta name="twitter:image" content="{escape(img)}">
+<meta http-equiv="refresh" content="0; url={redirect}">
+</head>
+<body style="font-family:sans-serif;background:#FDFDFD;color:#0A0A0A;text-align:center;padding:80px">
+Redirecting to your answer… <a href="{redirect}">View on yesno</a>
+</body>
+</html>"""
+    return HTMLResponse(content=html)
 
 
 app.include_router(api_router)

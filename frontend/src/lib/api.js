@@ -24,3 +24,17 @@ export async function askQuestion(question) {
     throw new Error("Something went wrong. Try again.");
   }
 }
+
+export async function createShare(question, result) {
+  const { data } = await axios.post(
+    `${API}/share`,
+    { question, result },
+    { timeout: 20000 }
+  );
+  return data.id;
+}
+
+export async function getShared(id) {
+  const { data } = await axios.get(`${API}/share/${id}`, { timeout: 20000 });
+  return data;
+}

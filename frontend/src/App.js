@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "@/App.css";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle } from "lucide-react";
@@ -12,7 +12,7 @@ import { AnswerDisplay } from "@/components/yesno/AnswerDisplay";
 import { ExampleQuestions } from "@/components/yesno/ExampleQuestions";
 import { History } from "@/components/yesno/History";
 import { useHistory } from "@/hooks/useHistory";
-import { askQuestion } from "@/lib/api";
+import { askQuestion, getShared } from "@/lib/api";
 
 function App() {
   const [question, setQuestion] = useState("");
@@ -23,6 +23,25 @@ function App() {
   const { history, addQuestion, clearHistory } = useHistory();
 
   const answered = Boolean(result || loading || error);
+
+  // Load a shared answer from ?shared={id}
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sharedId = params.get("shared");
+    if (!sharedId) return;
+    setLoading(true);
+    getShared(sharedId)
+      .then((data) => {
+        setSubmitted(data.question);
+        setQuestion(data.question);
+        setResult(data.result);
+      })
+      .catch(() => setError("This shared answer could not be found."))
+      .finally(() => {
+        setLoading(false);
+        window.history.replaceState({}, "", window.location.pathname);
+      });
+  }, []);
 
   const runQuery = async (q) => {
     const trimmed = (q || "").trim();
@@ -122,7 +141,7 @@ function App() {
             )}
 
             {!loading && !error && result && (
-              <AnswerDisplay key={submitted} result={result} />
+              <AnswerDisplay key={submitted} result={result} question={submitted} />
             )}
 
             {!answered && (
