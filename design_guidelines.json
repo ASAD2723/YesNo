@@ -1,0 +1,84 @@
+{
+  "theme_strategy": "Strict Light Theme (Editorial Minimal)",
+  "typography": {
+    "primary": "Playfair Display",
+    "primary_fallback": "serif",
+    "secondary": "Outfit",
+    "secondary_fallback": "sans-serif",
+    "rules": {
+      "logo": "Playfair Display, lowercase, text-4xl tracking-tight.",
+      "headings": "Playfair Display for massive YES/NO answers and massive emotional impact.",
+      "body": "Outfit (or Manrope) for UI elements, labels, buttons, and source descriptions.",
+      "sizes": {
+        "hero_answer": "text-8xl sm:text-[12vw] font-black tracking-tighter leading-none text-black",
+        "h2": "text-3xl md:text-5xl font-medium tracking-tight",
+        "h3": "text-xl font-medium",
+        "body": "text-lg text-gray-600",
+        "ui_labels": "text-xs tracking-[0.2em] uppercase font-bold text-gray-400"
+      },
+      "import_instructions": "Import via @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,800;1,400&display=swap'); in index.css"
+    }
+  },
+  "colors": {
+    "background": "#FDFDFD",
+    "foreground": "#0A0A0A",
+    "surface": "#FFFFFF",
+    "muted": "#F5F5F5",
+    "muted_foreground": "#737373",
+    "border": "#E5E5E5",
+    "brand_primary": "#000000",
+    "probability": {
+      "yes_fill": "#0A0A0A",
+      "no_fill": "#E5E5E5"
+    },
+    "rules": "No gradients. No purple AI aesthetics. Pure monochromatic grayscale for a premium, editorial, print-like aesthetic."
+  },
+  "visual_enhancers": {
+    "texture": "Global fixed overlay with white paper grain to kill digital flatness.",
+    "shadows": "Extremely soft and diffuse. shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] for cards and dropdowns.",
+    "borders": "1px solid #E5E5E5 for separation. Input gets 2px black border on focus.",
+    "corners": "Soft rounded corners (rounded-2xl or rounded-3xl) to blend SaaS simplicity with editorial type."
+  },
+  "layouts": {
+    "container": "max-w-3xl mx-auto px-6 md:px-12 py-12 min-h-[100svh] flex flex-col items-center justify-center relative z-10",
+    "alignment": "Center-aligned main container, but left-aligned inner content for sections like 'Reasoning' and 'Sources' to maintain reading rhythm."
+  },
+  "components": {
+    "Header": "Absolute top-0 left-0 right-0 p-6 flex justify-between items-center. Contains 'yesno' logo (Playfair).",
+    "SearchBar": "Massive, dominant. Use a giant input element, text-2xl md:text-4xl, rounded-2xl, border-2 border-transparent bg-gray-50 focus:bg-white focus:border-black transition-colors px-6 py-4 md:py-6 w-full. Submit arrow inside right.",
+    "AnswerDisplay": "Massive Playfair Display text (YES/NO). For probabilistic: Horizontal stacked bar or side-by-side bars. YES bar in black, NO bar in gray. Include 'YES 72%' labels.",
+    "ReasonButton": "Secondary button below answer. rounded-full border border-gray-200 hover:border-black bg-white px-6 py-2 text-sm transition-all flex items-center gap-2.",
+    "ReasonPanel": "Expands smoothly (Framer Motion height animation). Contains 'WHY?' (short paragraph), 'EVIDENCE' (bullet points), 'SOURCES' (stacked horizontal cards).",
+    "SourceCard": "Stacked layout. bg-white border border-gray-100 rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow. Title text-black, publisher text-xs text-gray-500.",
+    "History_Examples": "Below search bar before search. 'Try asking:' pill-shaped buttons with example questions. History clearly labeled with a 'Clear' action."
+  },
+  "motion": {
+    "libraries": "Framer Motion (mandatory)",
+    "rules": "Fast, crisp. Search input compresses (moves up, reduces padding). Answer scales up from 0.95 and fades in. Probability bars animate width from 0% to final.",
+    "loading": "Elegant text-based 'yesno is thinking...' with subtle opacity pulse. NO standard spinners."
+  },
+  "image_urls": {
+    "background_texture": {
+      "url": "https://images.unsplash.com/photo-1601662528567-526cd06f6582?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzF8MHwxfHNlYXJjaHwzfHx3aGl0ZSUyMHBhcGVyJTIwZ3JhaW4lMjB0ZXh0dXJlfGVufDB8fHx8MTc4NzU5MTk4MXww&ixlib=rb-4.1.0&q=85",
+      "description": "White paper grain texture. Use as fixed inset-0 z-0 pointer-events-none opacity-[0.25] mix-blend-multiply."
+    }
+  },
+  "instructions_to_main_agent": [
+    "Install framer-motion, lucide-react, sonner.",
+    "Set up Tailwind with Outfit and Playfair Display fonts.",
+    "Build a single-page app structure. The default state is centered search. Upon Enter, animate the search bar upwards and fade in the Answer component.",
+    "Ensure the probability bar fills up dynamically from 0 to its value using Framer Motion.",
+    "Sources should stack vertically as distinct cards on mobile, grid or vertical stack on desktop.",
+    "Implement local storage for recent searches.",
+    "All components must be accessible (focus states, ARIA labels, semantic HTML)."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "You tend to converge toward generic, 'on distribution' outputs. Avoid this.",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "You MUST NOT apply universal transition (e.g. transition: all).",
+    "You MUST NOT center align the app container (.App { text-align: center; }).",
+    "Create depth through layered design elements, typography hierarchy, and strategic whitespace.",
+    "Use sonner for any toasts.",
+    "All interactive elements MUST include data-testid attribute for robust automated testing."
+  ]
+}
